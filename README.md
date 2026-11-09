@@ -17,7 +17,10 @@ The crypto setup is also compatible with LineageOS 24.0.
 | Backup (boot partition; backup verified identical to the partition) | ✅ |
 | ADB, MTP (browse storage from PC), logcat | ✅ |
 | Vibration | ✅ |
+| Flashing a kernel zip (AnyKernel3) | ✅ |
 | Restore / flashing ROM zips | ⚠️ not tested yet |
+
+Known issue in builds before commit `a8e8f5c`: system could not be mounted, so rebooting showed a "No OS installed" warning. The release build fixes this (system is detected as 1009 MB; the warning threshold is 50 MB).
 
 Tested on davinci with LineageOS 23.2 (2026-11-08 nightly).
 
@@ -174,7 +177,10 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 | 備份（boot 分區，備份檔與分區內容一致） | ✅ |
 | ADB、MTP（電腦瀏覽手機檔案）、logcat | ✅ |
 | 震動 | ✅ |
+| 刷核心 zip（AnyKernel3） | ✅ |
 | 還原、刷 ROM zip | ⚠️ 尚未測試 |
+
+已知問題（`a8e8f5c` 之前的版本）：掛不上 system，重啟時會誤報「沒有安裝系統」。Release 版已修正（system 偵測為 1009MB，警告門檻是 50MB）。
 
 ## 升級到 LOS 24
 
