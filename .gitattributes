@@ -1,0 +1,10 @@
+# Text files must keep LF line endings (built on Linux)
+* text=auto eol=lf
+
+# Prebuilt binaries / blobs
+*.so binary
+*.img binary
+*.gz binary
+*.dtb binary
+*.bin binary
+recovery/root/system/bin/* binary

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+     Local manifest for building OrangeFox fox_16.0 for davinci.
+     Copy to <source>/.repo/local_manifests/davinci.xml before `repo sync`.
+-->
+<manifest>
+    <!--
+         OrangeFox external/util-linux master commit 10360b8 (2026-11-08) adds a Soong
+         `libblkid` module, which clashes with bootable/recovery/libblkid:
+           "MODULE.TARGET.SHARED_LIBRARIES.libblkid already defined by external/util-linux"
+         Pin to the last commit before that until upstream resolves it.
+    -->
+    <remove-project path="external/util-linux" />
+    <project path="external/util-linux" name="external/util-linux" remote="OrangeFox"
+             revision="d76cbf8f13e65ff657344f7f6a90042cf755ba59" />
+</manifest>
