@@ -3,23 +3,22 @@
 # specify MF_CHECK, and must come before any filesystems that do specify MF_CHECK
 # NOTE: /data 故意不寫在這裡，讓 recovery.fstab 的掛載選項 (含 inlinecrypt) 生效。
 #       這裡的 /data 會蓋掉 fstab 設定，導致 wrapped key 解密失敗。
+# NOTE: system/system_ext/product/vendor/odm 是 retrofit 動態分區 (沒有 super 分區)。
+#       OrangeFox 的 logical 處理只認 super，會把它們從清單移除；開機時 init 已建好 /dev/block/mapper/*，
+#       所以這裡直接指定 mapper 路徑。
+#       不要在這裡寫 by-name/system 這類原始路徑，那裡是 super metadata，無法掛載。
 
 
 # mount point  fstype device                             device2              flags
 /boot          emmc    /dev/block/bootdevice/by-name/boot
 /dtbo          emmc    /dev/block/bootdevice/by-name/dtbo                        flags=backup=1;display="Dtbo";flashimg=1
 /cache         ext4    /dev/block/bootdevice/by-name/cache
-/odm           ext4    /dev/block/bootdevice/by-name/odm                         flags=display="ODM";backup=0;wipeingui
-/odm           erofs   /dev/block/bootdevice/by-name/odm                         flags=display="ODM";backup=0
-/product       ext4    /dev/block/bootdevice/by-name/product                     flags=display="Product";backup=0;wipeingui
-/product       erofs   /dev/block/bootdevice/by-name/product                     flags=display="Product";backup=0
+/system_root   ext4    /dev/block/mapper/system                                  flags=display="System";backup=0
+/system_ext    ext4    /dev/block/mapper/system_ext                              flags=display="System_ext";backup=0
+/product       ext4    /dev/block/mapper/product                                 flags=display="Product";backup=0
+/vendor        ext4    /dev/block/mapper/vendor                                  flags=display="Vendor";backup=0
+/odm           ext4    /dev/block/mapper/odm                                     flags=display="ODM";backup=0
 /recovery      emmc    /dev/block/bootdevice/by-name/recovery                    flags=backup=1
-/system_root   ext4    /dev/block/bootdevice/by-name/system                      flags=display="System";backup=0;wipeingui
-/system_root   erofs   /dev/block/bootdevice/by-name/system                      flags=display="System";backup=0
-/system_ext    ext4    /dev/block/bootdevice/by-name/system_ext                  flags=display="System_ext";backup=0;wipeingui
-/system_ext    erofs   /dev/block/bootdevice/by-name/system_ext                  flags=display="System_ext";backup=0
-/vendor        ext4    /dev/block/bootdevice/by-name/vendor                      flags=display="Vendor";backup=0;wipeingui
-/vendor        erofs   /dev/block/bootdevice/by-name/vendor                      flags=display="Vendor";backup=0
 
 /system_image  emmc    /dev/block/bootdevice/by-name/system
 /vendor_image  emmc    /dev/block/bootdevice/by-name/vendor

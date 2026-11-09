@@ -11,11 +11,13 @@ The crypto setup is also compatible with LineageOS 24.0.
 | Feature | Status |
 |---|---|
 | Boot (`fastboot boot` / `fastboot flash recovery`) | ✅ |
-| Decryption: metadata encryption + FBE v2 + wrapped keys (LOS 23.2) | ✅ tested, no lock screen |
-| Decryption with PIN / pattern / password | ⚠️ untested |
-| ADB, MTP, logcat | ✅ |
-| Vibration | ⚠️ untested |
-| Flashing / backup / restore | ⚠️ untested |
+| Decryption: metadata encryption + FBE v2 + wrapped keys (LOS 23.2), no lock screen | ✅ |
+| Decryption with a lock screen PIN / password | ✅ |
+| Mount system / vendor / product / system_ext / odm (retrofit dynamic partitions) | ✅ |
+| Backup (boot partition; backup verified identical to the partition) | ✅ |
+| ADB, MTP (browse storage from PC), logcat | ✅ |
+| Vibration | ✅ |
+| Restore / flashing ROM zips | ⚠️ not tested yet |
 
 Tested on davinci with LineageOS 23.2 (2026-11-08 nightly).
 
@@ -26,6 +28,10 @@ Tested on davinci with LineageOS 23.2 (2026-11-08 nightly).
 > (`persist.vendor.recovery_update=false`). If you skip this, OrangeFox is replaced
 > by the stock LOS recovery the next time the system boots
 > (`vendor_flash_recovery` → `/vendor/bin/install-recovery.sh`).
+>
+> Note: whenever system/vendor is mounted, OrangeFox (by upstream design) renames
+> `/vendor/bin/install-recovery.sh` to `wlfx0install-recoverybak0xwlf` so that the stock recovery
+> can no longer overwrite it. LineageOS still boots normally (tested). A LOS update restores the file.
 
 ```bash
 fastboot boot OrangeFox-R12.0_LOS23-24-Unofficial-davinci.img       # optional: test without flashing
@@ -96,6 +102,11 @@ It also takes the kernel, dtb and recovery dtbo from the official LineageOS `rec
    `dtbo.img`. The padded one makes the image larger than the 64 MB recovery partition.
 5. **Keymaster 4.1.** LOS 23.x/24.x use Keymaster 4.1 (not 4.0) and wrapped keys
    (`wrappedkey_v0`). The blobs are taken from the matching LOS vendor tree.
+6. **Retrofit dynamic partitions.** davinci has no `super` partition; the metadata lives on
+   `system`. OrangeFox's logical-partition code only understands `super`, so it dropped
+   system/vendor/product/system_ext/odm from its partition list. The old tree pointed them at the
+   raw `by-name/system` partitions, which can't be mounted. init already creates
+   `/dev/block/mapper/*` at boot, so `twrp.flags` points directly at the mapper devices.
 
 ## Credits
 
@@ -117,6 +128,10 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 > **重要：LineageOS 每次開機都會把 recovery 換回官方版。**
 > 刷入前，先到 **設定 → 系統 → 更新程式 → 右上角 ⋮ → 偏好設定**，關閉 **「更新 recovery」**。
 > 沒關的話，下次開進系統時，OrangeFox 就會被換回 LOS 官方 recovery。
+>
+> 補充：只要在 OrangeFox 裡掛載過 system/vendor，OrangeFox 就會照官方預設行為，
+> 把 `/vendor/bin/install-recovery.sh` 改名成 `wlfx0install-recoverybak0xwlf`，防止官方 recovery 再蓋掉它。
+> 改名後 LOS 仍可正常開機（已測試），LOS 系統更新時會把這個檔案還原。
 
 1. 先關閉上面說的「更新 recovery」。
 2. 手機進 fastboot（關機後按住 電源 + 音量下）。
@@ -145,6 +160,21 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 4. **dtbo 太大**：要用 recovery.img 裡 0.7MB 的 dtbo，不能用補零到 32MB 的 dtbo.img，
    否則映像會超過 64MB 的 recovery 分區。
 5. **Keymaster 4.1**：LOS 23/24 用的是 Keymaster 4.1 和硬體包裝金鑰，加密相關檔案取自對應的 LOS vendor。
+6. **掛不上系統分區**：davinci 是改裝式動態分區，沒有 super 分區，分區表放在 system 上。
+   OrangeFox 只認 super，所以把 system/vendor 等分區從清單拿掉了。
+   開機時系統已經建好 `/dev/block/mapper/*`，所以 `twrp.flags` 直接指定這些路徑。
+
+## 測試結果
+
+| 功能 | 狀態 |
+|---|---|
+| 開機（fastboot boot / 刷入 recovery） | ✅ |
+| 解密（無鎖屏 / 有鎖屏密碼） | ✅ |
+| 掛載 system / vendor / product 等系統分區 | ✅ |
+| 備份（boot 分區，備份檔與分區內容一致） | ✅ |
+| ADB、MTP（電腦瀏覽手機檔案）、logcat | ✅ |
+| 震動 | ✅ |
+| 還原、刷 ROM zip | ⚠️ 尚未測試 |
 
 ## 升級到 LOS 24
 
