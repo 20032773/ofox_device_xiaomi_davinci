@@ -1,5 +1,18 @@
 # OrangeFox Recovery R12 — Xiaomi Mi 9T / Redmi K20 (davinci)
 
+> [!CAUTION]
+> **Do not use this build — serious known issues, under investigation.**
+> - **Format Data does not work.**
+> - **After flashing this build, other recoveries could not be flashed.**
+>
+> Release downloads have been taken down until these are resolved.
+>
+> **⚠️ 請勿使用 — 目前有嚴重問題，調查中。**
+> - **無法格式化 data。**
+> - **刷入這個版本後，無法再刷入其他 recovery。**
+>
+> Release 下載已經下架，等問題解決後再重新發布。
+
 OrangeFox Recovery **R12.0** (`fox_16.0`, Android 16 base) device tree for davinci / davinciin.
 It **fully decrypts LineageOS 23.2** (Android 16), which earlier OrangeFox/TWRP builds could not.
 The crypto setup is also compatible with LineageOS 24.0.
