@@ -10,7 +10,7 @@ The crypto setup is also compatible with LineageOS 24.0.
 
 | Feature | Status |
 |---|---|
-| Boot (`fastboot boot` / flashed to `recovery`) | ✅ |
+| Boot (`fastboot boot` / `fastboot flash recovery`) | ✅ |
 | Decryption: metadata encryption + FBE v2 + wrapped keys (LOS 23.2) | ✅ tested, no lock screen |
 | Decryption with PIN / pattern / password | ⚠️ untested |
 | ADB, MTP, logcat | ✅ |
@@ -18,6 +18,25 @@ The crypto setup is also compatible with LineageOS 24.0.
 | Flashing / backup / restore | ⚠️ untested |
 
 Tested on davinci with LineageOS 23.2 (2026-11-08 nightly).
+
+## Install
+
+> **Important — LineageOS restores its own recovery on every boot.** First go to
+> **Settings → System → Updater → ⋮ → Preferences** and turn off **"Update recovery"**
+> (`persist.vendor.recovery_update=false`). If you skip this, OrangeFox is replaced
+> by the stock LOS recovery the next time the system boots
+> (`vendor_flash_recovery` → `/vendor/bin/install-recovery.sh`).
+
+```bash
+fastboot boot OrangeFox-R12.0_LOS23-24-Unofficial-davinci.img       # optional: test without flashing
+fastboot getvar product                                             # see note below
+fastboot flash recovery OrangeFox-R12.0_LOS23-24-Unofficial-davinci.img
+fastboot reboot
+```
+
+If `fastboot flash` fails with `Requested download size is more than max allowed`, the bootloader
+wasn't ready yet; the real limit is 768 MB. Send any command first (e.g. `fastboot getvar product`),
+or `fastboot reboot bootloader`, then flash again.
 
 ## Build
 
@@ -95,23 +114,25 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 
 ## 安裝
 
-1. 手機進 fastboot（關機後按住 電源 + 音量下）。
-2. 先暫時開機測試，這不會寫入手機：
+> **重要：LineageOS 每次開機都會把 recovery 換回官方版。**
+> 刷入前，先到 **設定 → 系統 → 更新程式 → 右上角 ⋮ → 偏好設定**，關閉 **「更新 recovery」**。
+> 沒關的話，下次開進系統時，OrangeFox 就會被換回 LOS 官方 recovery。
+
+1. 先關閉上面說的「更新 recovery」。
+2. 手機進 fastboot（關機後按住 電源 + 音量下）。
+3. （可選）先暫時開機測試，這不會寫入手機：
    ```bash
    fastboot boot OrangeFox-R12.0_LOS23-24-Unofficial-davinci.img
    ```
-3. 確認可以用之後，再刷入 recovery 分區：
+4. 刷入 recovery 分區：
    ```bash
+   fastboot getvar product
    fastboot flash recovery OrangeFox-R12.0_LOS23-24-Unofficial-davinci.img
+   fastboot reboot
    ```
-   如果出現 `Requested download size is more than max allowed`，可以在已 root 的系統裡用 dd 寫入：
-   ```bash
-   adb push OrangeFox-*.img /data/local/tmp/ofox.img
-   adb shell su -c "dd if=/data/local/tmp/ofox.img of=/dev/block/by-name/recovery bs=4M"
-   ```
-
-**LOS 系統更新**：只要 LOS 更新程式的「更新 recovery」選項保持關閉（預設就是關閉），
-系統更新就不會把 OrangeFox 換回官方 recovery。
+   如果出現 `Requested download size is more than max allowed`，是 bootloader 還沒準備好
+   （實際上限是 768MB，不是檔案太大）。先隨便下一個指令，例如 `fastboot getvar product`，
+   或 `fastboot reboot bootloader`，再刷一次就好。
 
 ## 解決過的問題
 
