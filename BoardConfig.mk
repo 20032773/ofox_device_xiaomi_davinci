@@ -173,6 +173,11 @@ BOARD_RECOVERY_IMAGE_PREPARE += mkdir -p $(TARGET_RECOVERY_ROOT_OUT)/system/lib6
 # Android 16 的 logd 需要 "logd" 控制 socket，否則一啟動就 abort (task_profiles.json 放在 recovery/root)
 BOARD_RECOVERY_IMAGE_PREPARE += grep -q "socket logd stream" $(TARGET_RECOVERY_ROOT_OUT)/init.recovery.logd.rc || sed -i "s|^    socket logdr seqpacket|    socket logd stream 0666 logd logd\n    socket logdr seqpacket|" $(TARGET_RECOVERY_ROOT_OUT)/init.recovery.logd.rc;
 
+# 格式化 data 前先刪除 metadata 加密的 dm-default-key 裝置 (/dev/block/mapper/userdata)
+# 沒有這個設定時，make_f2fs 會因為 sda32 被 dm 佔用而失敗: "Error: In use by the system!"
+OF_USE_DMCTL := 1
+TARGET_RECOVERY_DEVICE_MODULES += dmctl
+
 # Ramdisk 用 LZMA 壓縮
 # gzip 時 ramdisk 約 35.7MB，davinci 的 ABL 不會啟動核心，直接退回 fastboot
 # LZMA 約 20MB 可以開機 (LOS 核心有 CONFIG_RD_LZMA，沒有 RD_XZ/RD_LZ4)

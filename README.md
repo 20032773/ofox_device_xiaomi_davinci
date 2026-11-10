@@ -1,17 +1,15 @@
 # OrangeFox Recovery R12 — Xiaomi Mi 9T / Redmi K20 (davinci)
 
-> [!CAUTION]
-> **Do not use this build — serious known issues, under investigation.**
-> - **Format Data does not work.**
-> - **After flashing this build, other recoveries could not be flashed.**
+> [!NOTE]
+> **2026-11-10 — Format Data fixed.** The first release (`R12.0-davinci-20261109`, now withdrawn)
+> could not format data, because the metadata-encryption dm device was still holding the userdata
+> partition. Fixed by enabling `OF_USE_DMCTL`, and verified: format → LOS sets up fresh encryption
+> → OrangeFox decrypts it.
+> Flashing other recoveries afterwards works; the earlier report turned out to be a false alarm.
 >
-> Release downloads have been taken down until these are resolved.
->
-> **⚠️ 請勿使用 — 目前有嚴重問題，調查中。**
-> - **無法格式化 data。**
-> - 
->
-> Release 下載已經下架，等問題解決後再重新發布。
+> **2026-11-10 — 格式化 data 已修正。** 第一版 Release（已下架）無法格式化 data，
+> 原因是 metadata 加密的 dm 裝置還佔用著 userdata 分區。打開 `OF_USE_DMCTL` 後已修正，並實測完整流程：
+> 格式化 → LOS 重新建立加密 → OrangeFox 成功解密。刷入其他 recovery 也確認正常，之前的回報是誤判。
 
 OrangeFox Recovery **R12.0** (`fox_16.0`, Android 16 base) device tree for davinci / davinciin.
 It **fully decrypts LineageOS 23.2** (Android 16), which earlier OrangeFox/TWRP builds could not.
@@ -31,6 +29,8 @@ The crypto setup is also compatible with LineageOS 24.0.
 | ADB, MTP (browse storage from PC), logcat | ✅ |
 | Vibration | ✅ |
 | Flashing a kernel zip (AnyKernel3) | ✅ |
+| Format Data (then LOS re-encrypts, then OrangeFox decrypts again) | ✅ |
+| Flashing another recovery afterwards | ✅ |
 | Restore / flashing ROM zips | ⚠️ not tested yet |
 
 Known issue in builds before commit `a8e8f5c`: system could not be mounted, so rebooting showed a "No OS installed" warning. The release build fixes this (system is detected as 1009 MB; the warning threshold is 50 MB).
@@ -48,6 +48,9 @@ Tested on davinci with LineageOS 23.2 (2026-11-08 nightly).
 > Note: whenever system/vendor is mounted, OrangeFox (by upstream design) renames
 > `/vendor/bin/install-recovery.sh` to `wlfx0install-recoverybak0xwlf` so that the stock recovery
 > can no longer overwrite it. LineageOS still boots normally (tested). A LOS update restores the file.
+>
+> **Formatting data resets this setting to "on"** (it is stored in `/data`). After a format, turn it
+> off again before flashing OrangeFox, or LOS will put its own recovery back.
 
 ```bash
 fastboot boot OrangeFox-R12.0_LOS23-24-Unofficial-davinci.img       # optional: test without flashing
@@ -123,6 +126,10 @@ It also takes the kernel, dtb and recovery dtbo from the official LineageOS `rec
    system/vendor/product/system_ext/odm from its partition list. The old tree pointed them at the
    raw `by-name/system` partitions, which can't be mounted. init already creates
    `/dev/block/mapper/*` at boot, so `twrp.flags` points directly at the mapper devices.
+7. **Format Data.** With metadata encryption, `/data` sits on a dm-default-key device
+   (`/dev/block/mapper/userdata`) on top of `sda32`. Without `OF_USE_DMCTL`, recovery only unmounts
+   `/data`, and `make_f2fs` on the raw partition fails with `Error: In use by the system!`.
+   `OF_USE_DMCTL := 1` runs `dmctl delete userdata` first.
 
 ## Credits
 
@@ -148,6 +155,9 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 > 補充：只要在 OrangeFox 裡掛載過 system/vendor，OrangeFox 就會照官方預設行為，
 > 把 `/vendor/bin/install-recovery.sh` 改名成 `wlfx0install-recoverybak0xwlf`，防止官方 recovery 再蓋掉它。
 > 改名後 LOS 仍可正常開機（已測試），LOS 系統更新時會把這個檔案還原。
+>
+> **格式化 data 會把這個設定重置成「開啟」**（設定存在 /data 裡）。格式化後要刷 OrangeFox 前，
+> 請再到設定裡關一次，否則 LOS 開機時又會換回官方 recovery。
 
 1. 先關閉上面說的「更新 recovery」。
 2. 手機進 fastboot（關機後按住 電源 + 音量下）。
@@ -179,6 +189,9 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 6. **掛不上系統分區**：davinci 是改裝式動態分區，沒有 super 分區，分區表放在 system 上。
    OrangeFox 只認 super，所以把 system/vendor 等分區從清單拿掉了。
    開機時系統已經建好 `/dev/block/mapper/*`，所以 `twrp.flags` 直接指定這些路徑。
+7. **無法格式化 data**：有 metadata 加密時，`/data` 是架在 sda32 上的加密映射裝置（`/dev/block/mapper/userdata`）。
+   原本格式化前只卸載 `/data`，沒有拆掉這層映射，`make_f2fs` 就會失敗並回報 `Error: In use by the system!`。
+   打開 `OF_USE_DMCTL := 1` 後，OrangeFox 會先執行 `dmctl delete userdata` 再格式化。
 
 ## 測試結果
 
@@ -191,6 +204,8 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 | ADB、MTP（電腦瀏覽手機檔案）、logcat | ✅ |
 | 震動 | ✅ |
 | 刷核心 zip（AnyKernel3） | ✅ |
+| 格式化 data（之後 LOS 重建加密、OrangeFox 再次解密） | ✅ |
+| 之後再刷其他 recovery | ✅ |
 | 還原、刷 ROM zip | ⚠️ 尚未測試 |
 
 已知問題（`a8e8f5c` 之前的版本）：掛不上 system，重啟時會誤報「沒有安裝系統」。Release 版已修正（system 偵測為 1009MB，警告門檻是 50MB）。
