@@ -33,7 +33,9 @@ The crypto setup is also compatible with LineageOS 24.0.
 | Flashing a kernel zip (AnyKernel3) | ✅ |
 | Format Data (then LOS re-encrypts, then OrangeFox decrypts again) | ✅ |
 | Flashing another recovery afterwards | ✅ |
-| Restore / flashing ROM zips | ⚠️ not tested yet |
+| Flashing a ROM zip (LineageOS) | ✅ |
+| LineageOS OTA update | ✅ |
+| Restore from backup | ⚠️ not tested yet |
 
 Known issue in builds before commit `a8e8f5c`: system could not be mounted, so rebooting showed a "No OS installed" warning. The release build fixes this (system is detected as 1009 MB; the warning threshold is 50 MB).
 
@@ -219,7 +221,9 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 | 刷核心 zip（AnyKernel3） | ✅ |
 | 格式化 data（之後 LOS 重建加密、OrangeFox 再次解密） | ✅ |
 | 之後再刷其他 recovery | ✅ |
-| 還原、刷 ROM zip | ⚠️ 尚未測試 |
+| 刷 ROM zip（LineageOS） | ✅ |
+| LineageOS OTA 更新 | ✅ |
+| 還原備份 | ⚠️ 尚未測試 |
 
 已知問題（`a8e8f5c` 之前的版本）：掛不上 system，重啟時會誤報「沒有安裝系統」。Release 版已修正（system 偵測為 1009MB，警告門檻是 50MB）。
 
