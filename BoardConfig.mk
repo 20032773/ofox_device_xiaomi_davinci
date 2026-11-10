@@ -63,6 +63,11 @@ BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOT_HEADER_VERSION)
 # Assert
 TARGET_OTA_ASSERT_DEVICE := davinci,davinciin
 
+# davinci 是 A-only (非 A/B)
+# Android 16 的 board_config.mk 在沒設定時預設 AB_OTA_UPDATER := true，
+# 會讓 recovery 出現 A/B slot 切換選單 (ro.build.ab_update=true)，必須明確關閉
+AB_OTA_UPDATER := false
+
 # AVB
 BOARD_AVB_ENABLE := true
 BOARD_AVB_RECOVERY_ALGORITHM := SHA256_RSA4096
@@ -142,6 +147,9 @@ TW_BRIGHTNESS_PATH := "/sys/class/backlight/panel0-backlight/brightness"
 TW_MAX_BRIGHTNESS := 2047
 TW_DEFAULT_BRIGHTNESS := 1200
 TW_SUPPORT_INPUT_AIDL_HAPTICS := true
+# recovery 裡沒有 health HAL，預設的 GetBatteryInfo() 讀不到電量 (顯示 "!")
+# 改為直接讀 /sys/class/power_supply/battery/{capacity,status}
+TW_USE_LEGACY_BATTERY_SERVICES := true
 TW_OVERRIDE_SYSTEM_PROPS := \
     "ro.build.date.utc;ro.build.product;ro.build.fingerprint=ro.system.build.fingerprint;ro.build.version.incremental;ro.product.device=ro.product.system.device;ro.product.model=ro.product.system.model;ro.product.name=ro.product.system.name"
 RECOVERY_SDCARD_ON_DATA := true

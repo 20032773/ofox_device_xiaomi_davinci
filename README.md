@@ -28,6 +28,8 @@ The crypto setup is also compatible with LineageOS 24.0.
 | Backup (boot partition; backup verified identical to the partition) | ✅ |
 | ADB, MTP (browse storage from PC), logcat | ✅ |
 | Vibration | ✅ |
+| Battery level in the status bar | ✅ |
+| Reboot menu without A/B slot options (davinci is A-only) | ✅ |
 | Flashing a kernel zip (AnyKernel3) | ✅ |
 | Format Data (then LOS re-encrypts, then OrangeFox decrypts again) | ✅ |
 | Flashing another recovery afterwards | ✅ |
@@ -130,6 +132,11 @@ It also takes the kernel, dtb and recovery dtbo from the official LineageOS `rec
    (`/dev/block/mapper/userdata`) on top of `sda32`. Without `OF_USE_DMCTL`, recovery only unmounts
    `/data`, and `make_f2fs` on the raw partition fails with `Error: In use by the system!`.
    `OF_USE_DMCTL := 1` runs `dmctl delete userdata` first.
+8. **A/B slot menu on an A-only device.** Android 16's `board_config.mk` defaults
+   `AB_OTA_UPDATER := true` when a tree does not set it, so the reboot menu offered slot A/B
+   switching. The tree now sets `AB_OTA_UPDATER := false`.
+9. **Battery shows "!".** Recovery has no health HAL, so the default `GetBatteryInfo()` fails.
+   `TW_USE_LEGACY_BATTERY_SERVICES := true` reads `/sys/class/power_supply/battery/` directly.
 
 ## Credits
 
@@ -192,6 +199,10 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 7. **無法格式化 data**：有 metadata 加密時，`/data` 是架在 sda32 上的加密映射裝置（`/dev/block/mapper/userdata`）。
    原本格式化前只卸載 `/data`，沒有拆掉這層映射，`make_f2fs` 就會失敗並回報 `Error: In use by the system!`。
    打開 `OF_USE_DMCTL := 1` 後，OrangeFox 會先執行 `dmctl delete userdata` 再格式化。
+8. **重啟選單出現 A/B 切換**：Android 16 的編譯系統在沒設定時，預設 `AB_OTA_UPDATER := true`，
+   把 davinci 當成 A/B 機型。已明確設定 `AB_OTA_UPDATER := false`。
+9. **電量顯示「!」**：recovery 裡沒有電池 HAL 服務，預設的讀法會失敗。
+   改用 `TW_USE_LEGACY_BATTERY_SERVICES := true`，直接讀核心的 `/sys/class/power_supply/battery/`。
 
 ## 測試結果
 
@@ -203,6 +214,8 @@ Device tree sources: Apache-2.0. Proprietary blobs belong to their respective ow
 | 備份（boot 分區，備份檔與分區內容一致） | ✅ |
 | ADB、MTP（電腦瀏覽手機檔案）、logcat | ✅ |
 | 震動 | ✅ |
+| 電量顯示 | ✅ |
+| 重啟選單沒有 A/B 選項（davinci 是單分區機型） | ✅ |
 | 刷核心 zip（AnyKernel3） | ✅ |
 | 格式化 data（之後 LOS 重建加密、OrangeFox 再次解密） | ✅ |
 | 之後再刷其他 recovery | ✅ |
